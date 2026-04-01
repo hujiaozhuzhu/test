@@ -1,0 +1,76 @@
+version: '3.3'
+
+services:
+  # Java后端服务（包含4个Java漏洞场景）
+  vuln-java:
+    build:
+      context: ./vuln-java
+      dockerfile: Dockerfile
+    container_name: vuln-java
+    ports:
+      - "18080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+    networks:
+      - vuln-net
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    restart: unless-stopped
+
+  # PHP后端服务（包含2个PHP漏洞场景）
+  vuln-php:
+    build:
+      context: ./vuln-php
+      dockerfile: Dockerfile
+    container_name: vuln-php
+    ports:
+      - "18081:80"
+    volumes:
+      - ./vuln-php:/var/www/html
+    networks:
+      - vuln-net
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    restart: unless-stopped
+
+  # MySQL数据库（可选，用于用户数据存储）
+  mysql:
+    image: mysql:5.7
+    container_name: vuln-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root123456
+      MYSQL_DATABASE: vuln_db
+      MYSQL_USER: vuln_user
+      MYSQL_PASSWORD: vuln_pass
+    ports:
+      - "13306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./vuln-php/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - vuln-net
+    restart: unless-stopped
+
+  # 前端服务（静态页面）
+  frontend:
+    image: nginx:alpine
+    container_name: vuln-frontend
+    ports:
+      - "1008:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html
+    depends_on:
+      - vuln-java
+      - vuln-php
+    networks:
+      - vuln-net
+    restart: unless-stopped
+
+networks:
+  vuln-net:
+    driver: bridge
+
+volumes:
+  mysql_data:

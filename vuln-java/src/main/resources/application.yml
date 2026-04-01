@@ -1,0 +1,18 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: vuln-java
+
+  datasource:
+    url: jdbc:mysql://mysql:3306/vuln_db?useSSL=false&serverTimezone=UTC
+    username: vuln_user
+    password: vuln_pass
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
