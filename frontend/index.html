@@ -26,6 +26,12 @@
         .java-section { border-left: 5px solid #667eea; }
         .php-section { border-left: 5px solid #f5576c; }
     </style>
+    <script>
+        // 动态获取主机地址
+        window.currentHost = window.location.host;
+        window.currentProtocol = window.location.protocol;
+        window.baseUrl = `${window.currentProtocol}//${window.currentHost}`;
+    </script>
 </head>
 <body>
     <div class="container">
@@ -44,28 +50,28 @@
                 <h3>1. Java原生反序列化</h3>
                 <p>使用Apache Commons Collections 3.1的Java原生反序列化漏洞，可导致远程代码执行</p>
                 <span class="risk-badge risk-high">高危</span><br>
-                <a href="http://localhost:18080/vuln1" class="vuln-link">进入挑战</a>
+                <a href="javascript:void(0)" onclick="window.location.href='http://'+window.currentHost.replace(':1008',':18080')+'/vuln1'" class="vuln-link">进入挑战</a>
             </div>
 
             <div class="vuln-card">
                 <h3>2. Fastjson反序列化</h3>
                 <p>使用Fastjson 1.2.24的JNDI注入反序列化漏洞，通过@type指定反序列化类</p>
                 <span class="risk-badge risk-high">高危</span><br>
-                <a href="http://localhost:18080/vuln2" class="vuln-link">进入挑战</a>
+                <a href="javascript:void(0)" onclick="window.location.href='http://'+window.currentHost.replace(':1008',':18080')+'/vuln2'" class="vuln-link">进入挑战</a>
             </div>
 
             <div class="vuln-card">
                 <h3>3. Jackson反序列化</h3>
                 <p>使用Jackson 2.9.8的CVE-2017-7525漏洞，通过enableDefaultTyping触发</p>
                 <span class="risk-badge risk-medium">中高危</span><br>
-                <a href="http://localhost:18080/vuln3" class="vuln-link">进入挑战</a>
+                <a href="javascript:void(0)" onclick="window.location.href='http://'+window.currentHost.replace(':1008',':18080')+'/vuln3'" class="vuln-link">进入挑战</a>
             </div>
 
             <div class="vuln-card">
                 <h3>4. Shiro反序列化</h3>
                 <p>使用Apache Shiro 1.2.4的RememberMe功能漏洞，默认密钥导致RCE</p>
                 <span class="risk-badge risk-high">高危</span><br>
-                <a href="http://localhost:18080/vuln4" class="vuln-link">进入挑战</a>
+                <a href="javascript:void(0)" onclick="window.location.href='http://'+window.currentHost.replace(':1008',':18080')+'/vuln4'" class="vuln-link">进入挑战</a>
             </div>
         </div>
 
@@ -75,14 +81,14 @@
                 <h3>5. PHP反序列化POP链</h3>
                 <p>通过构造POP链，利用__destruct、__wakeup等魔术方法实现代码执行</p>
                 <span class="risk-badge risk-medium">中危</span><br>
-                <a href="http://localhost:18081/vuln5.php" class="vuln-link">进入挑战</a>
+                <a href="javascript:void(0)" onclick="window.location.href='http://'+window.currentHost.replace(':1008',':18081')+'/vuln5.php'" class="vuln-link">进入挑战</a>
             </div>
 
             <div class="vuln-card">
                 <h3>6. PHP Phar反序列化</h3>
                 <p>通过文件上传触发Phar文件的元数据反序列化，绕过文件类型检测</p>
                 <span class="risk-badge risk-medium">中高危</span><br>
-                <a href="http://localhost:18081/vuln6.php" class="vuln-link">进入挑战</a>
+                <a href="javascript:void(0)" onclick="window.location.href='http://'+window.currentHost.replace(':1008',':18081')+'/vuln6.php'" class="vuln-link">进入挑战</a>
             </div>
         </div>
     </div>
