@@ -1,13 +1,5 @@
 FROM amazoncorretto:8-alpine3.17
-
 WORKDIR /app
-
-# 复制简单的HTTP服务器
-COPY SimpleServer.java .
-
-# 编译并运行
-RUN javac SimpleServer.java
-
+COPY target/vuln-java-1.0.0.jar app.jar
 EXPOSE 8080
-
-CMD ["java", "SimpleServer"]
+CMD ["java", "-jar", "app.jar"]

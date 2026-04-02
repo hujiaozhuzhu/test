@@ -23,10 +23,22 @@
     </properties>
 
     <dependencies>
-        <!-- Spring Boot Web -->
+        <!-- Spring Boot Web (excluding Jackson auto-config) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-databind</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- Thymeleaf template engine -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
 
         <!-- Commons Collections 3.1 (存在反序列化漏洞) -->
@@ -43,12 +55,12 @@
             <version>1.2.24</version>
         </dependency>
 
-        <!-- Jackson 2.9.8 (存在反序列化漏洞) -->
-        <dependency>
+        <!-- Jackson 2.9.8 (存在反序列化漏洞) - 移除以避免自动配置冲突 -->
+        <!-- <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>2.9.8</version>
-        </dependency>
+        </dependency> -->
 
         <!-- Apache Shiro 1.2.4 (存在反序列化漏洞) -->
         <dependency>
