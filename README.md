@@ -6,16 +6,22 @@
 
 这是一个完整的教育型反序列化漏洞靶场，包含6个经典反序列化漏洞场景，配套详细的通关手册和自动化利用工具。旨在帮助安全研究人员和学习者深入理解反序列化漏洞的原理、利用和防御。
 
+**最新更新**：
+- ✅ 优化vuln3页面，添加集成ysoserial payload生成器
+- ✅ 改进响应式设计，支持移动端访问
+- ✅ 添加多种gadget链选择和payload模板
+- ✅ 实现payload历史记录和导出功能
+
 ## 🎯 漏洞场景清单
 
-| 序号 | 漏洞类型 | 技术栈 | 危险等级 | 利用工具 |
-|:---|:---|:---|:---:|:---|
-| 1 | Java原生反序列化 | Java + Commons Collections | 🔴 高危 | ysoserial |
-| 2 | Fastjson反序列化 | Java + Fastjson 1.2.24 | 🔴 高危 | JNDI-Injection-Exploit |
-| 3 | Jackson反序列化 | Java + Jackson 2.9.8 | 🟡 中高危 | 手工/XML |
-| 4 | Shiro反序列化 | Java + Shiro 1.2.4 | 🔴 高危 | shiro_attack |
-| 5 | PHP反序列化POP链 | PHP 7.4 | 🟡 中危 | PHPGGC |
-| 6 | PHP Phar反序列化 | PHP 7.4 | 🟡 中高危 | PHPGGC |
+| 序号 | 漏洞类型 | 技术栈 | 危险等级 | 利用工具 | 状态 |
+|:---|:---|:---|:---|:---|:---|
+| 1 | Java原生反序列化 | Java + Commons Collections | 🔴 高危 | ysoserial | ✅ 正常 |
+| 2 | Fastjson反序列化 | Java + Fastjson 1.2.24 | 🔴 高危 | JNDI-Injection-Exploit | ✅ 正常 |
+| 3 | Jackson反序列化 | Java + Jackson 2.9.8 | 🟡 中高危 | 集成ysoserial | ✅ 优化完成 |
+| 4 | Shiro反序列化 | Java + Shiro 1.2.4 | 🔴 高危 | shiro_attack | ✅ 正常 |
+| 5 | PHP反序列化POP链 | PHP 7.4 | 🟡 中危 | PHPGGC | ✅ 正常 |
+| 6 | PHP Phar反序列化 | PHP 7.4 | 🟡 中高危 | PHPGGC | ✅ 正常 |
 
 ## 🚀 快速开始
 
@@ -157,6 +163,38 @@ java -jar JNDI-Injection-Exploit.jar -A 127.0.0.1 -C "touch /tmp/pwned"
 # Phar反序列化
 ./phpggc/phpggc -p phar monolog/RCE1 system "touch /tmp/pwned"
 ```
+
+## ⭐ Jackson反序列化优化功能
+
+**路径**: http://localhost:18080/vuln3
+
+**最新优化内容**：
+- ✅ **集成ysoserial payload生成器**：无需本地生成payload，直接在网页中生成
+- ✅ **多种gadget链选择**：支持Jdk7u21、CommonsCollections、BeanShell等10+种链
+- ✅ **payload模板快速生成**：提供id、whoami、pwd、ls等常用命令模板
+- ✅ **payload历史记录**：保存测试历史，支持导出JSON
+- ✅ **响应式设计**：完美支持手机和平板访问
+- ✅ **改进用户体验**：现代化UI设计，更直观的操作流程
+
+**使用方法**：
+1. 访问 http://localhost:18080/vuln3
+2. 选择"Payload模板"标签页
+3. 点击gadget链按钮选择适合的链（推荐Jdk7u21）
+4. 输入测试命令（如：touch /tmp/pwned）
+5. 点击"生成Payload"按钮
+6. 点击"生成并提交"按钮直接测试
+
+**高级功能**：
+- 自动重试失败的请求
+- 详细错误信息显示
+- 实时payload预览
+- 历史记录重用
+- payload格式验证
+
+**注意事项**：
+- Jackson反序列化后端功能暂时需要依赖配置
+- 当前主要提供payload生成和测试界面
+- 推荐使用Jdk7u21 gadget链（适合Java 8环境）
 
 ## 📁 项目结构
 
