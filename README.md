@@ -114,13 +114,13 @@ bash setup_tools.sh
 
 ### 方式一：手工测试（推荐新手）
 
-1. 访问 [handbook.md](handbook.md) 查看详细通关手册
+1. 访问 [OPEN_SOURCE_TOOLS_GUIDE.md](OPEN_SOURCE_TOOLS_GUIDE.md) 查看详细通关手册
 2. 每个漏洞章节包含：
-   - 前置知识（10%）
-   - 环境准备（10%）
-   - 手工测试方法（40%）
-   - 工具利用方法（30%）
-   - 修复方案（10%）
+   - 环境准备和验证
+   - 详细的利用步骤（可直接复制粘贴）
+   - 多种利用方法
+   - 验证和清理步骤
+   - 常见问题解决方案
 
 3. 按手册步骤逐步学习，每个场景2-3页A4纸内容
 
@@ -202,7 +202,7 @@ java -jar JNDI-Injection-Exploit.jar -A 127.0.0.1 -C "touch /tmp/pwned"
 deserialization-range/
 ├── docker-compose.yml          # Docker编排配置
 ├── README.md                   # 本文件
-├── handbook.md                 # 完整通关手册
+├── OPEN_SOURCE_TOOLS_GUIDE.md  # 开源工具利用通关手册
 ├── vuln-java/                  # Java漏洞场景
 │   ├── Dockerfile
 │   ├── pom.xml
